@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Research Report Generator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-content">
+        <div class="logo">
+            <span class="logo-icon">🛡️</span>
+            <div>
+                <h1>SecReport Pro</h1>
+                <p>Security Research Report Generator</p>
+            </div>
+        </div>
+        <div class="header-badges">
+            <span class="badge">v2.0</span>
+            <span class="badge badge-green">Secure</span>
+        </div>
+    </div>
+</header>
+
+<!-- MAIN CONTAINER -->
+<div class="container">
+
+    <!-- STEP INDICATOR -->
+    <div class="steps">
+        <div class="step active" id="step1-indicator">
+            <div class="step-number">1</div>
+            <div class="step-label">Upload Template</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step2-indicator">
+            <div class="step-number">2</div>
+            <div class="step-label">Edit Fields</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step3-indicator">
+            <div class="step-number">3</div>
+            <div class="step-label">Preview</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step4-indicator">
+            <div class="step-number">4</div>
+            <div class="step-label">Export</div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+
+            <!-- STEP 1: UPLOAD -->
+            <div class="panel" id="upload-panel">
+                <div class="panel-header">
+                    <span>📤</span>
+                    <h2>Step 1: Upload PDF Template</h2>
+                </div>
+                <div class="panel-body">
+                    
+                    <!-- DROP ZONE -->
+                    <div class="dropzone" id="dropzone">
+                        <div class="dropzone-content" id="dropzone-content">
+                            <div class="upload-icon">📄</div>
+                            <h3>Drop PDF Here</h3>
+                            <p>or click to browse</p>
+                            <p class="small-text">Supports PDF files up to 50MB</p>
+                        </div>
+                        <input type="file" id="pdf-input" accept=".pdf" hidden>
+                    </div>
+
+                    <!-- FILE INFO -->
+                    <div class="file-info hidden" id="file-info">
+                        <div class="file-info-content">
+                            <span class="file-icon">📋</span>
+                            <div class="file-details">
+                                <span class="file-name" id="file-name"></span>
+                                <span class="file-size" id="file-size"></span>
+                            </div>
+                            <button class="btn-remove" id="remove-file">✕</button>
+                        </div>
+                    </div>
+
+                    <!-- TEMPLATE BUTTONS -->
+                    <div class="template-section">
+                        <p class="section-label">Or use a preset template:</p>
+                        <div class="template-buttons">
+                            <button class="btn-template" onclick="loadTemplate('pentest')">
+                                🔴 Pentest Report
+                            </button>
+                            <button class="btn-template" onclick="loadTemplate('vulnerability')">
+                                🟡 Vulnerability Assessment
+                            </button>
+                            <button class="btn-template" onclick="loadTemplate('incident')">
+                                🔵 Incident Response
+                            </button>
+                            <button class="btn-template" onclick="loadTemplate('audit')">
+                                🟢 Security Audit
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- STEP 2: FIELDS EDITOR -->
+            <div class="panel hidden" id="fields-panel">
+                <div class="panel-header">
+                    <span>✏️</span>
+                    <h2>Step 2: Edit Report Fields</h2>
+                    <button class="btn-small" onclick="addCustomField()">+ Add Field</button>
+                </div>
+                <div class="panel-body">
+
+                    <!-- SEARCH BAR -->
+                    <div class="search-bar">
+                        <input type="text" 
+                               id="field-search" 
+                               placeholder="🔍 Search fields..."
+                               oninput="searchFields(this.value)">
+                    </div>
+
+                    <!-- TABS -->
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('general')">General</button>
+                        <button class="tab" onclick="switchTab('findings')">Findings</button>
+                        <button class="tab" onclick="switchTab('recommendations')">Recommendations</button>
+                        <button class="tab" onclick="switchTab('metadata')">Metadata</button>
+                    </div>
+
+                    <!-- TAB CONTENT -->
+                    <div class="tab-content">
+
+                        <!-- GENERAL TAB -->
+                        <div id="tab-general" class="tab-pane active">
+                            <div class="fields-grid" id="general-fields">
+                                <!-- Fields generated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- FINDINGS TAB -->
+                        <div id="tab-findings" class="tab-pane hidden">
+                            <div class="findings-container" id="findings-container">
+                                <!-- Findings generated by JS -->
+                            </div>
+                            <button class="btn-add-finding" onclick="addFinding()">
+                                + Add New Finding
+                            </button>
+                        </div>
+
+                        <!-- RECOMMENDATIONS TAB -->
+                        <div id="tab-recommendations" class="tab-pane hidden">
+                            <div id="recommendations-container">
+                                <!-- Recommendations generated by JS -->
+                            </div>
+                            <button class="btn-add-finding" onclick="addRecommendation()">
+                                + Add Recommendation
+                            </button>
+                        </div>
+
+                        <!-- METADATA TAB -->
+                        <div id="tab-metadata" class="tab-pane hidden">
+                            <div class="fields-grid" id="metadata-fields">
+                                <!-- Metadata fields -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL: PREVIEW -->
+        <div class="right-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>👁️</span>
+                    <h2>Live Preview</h2>
+                    <div class="preview-controls">
+                        <button class="btn-small" onclick="zoomIn()">+</button>
+                        <span id="zoom-level">100%</span>
+                        <button class="btn-small" onclick="zoomOut()">-</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    
+                    <!-- PDF PREVIEW -->
+                    <div id="preview-placeholder" class="preview-placeholder">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">📄</div>
+                            <h3>Report Preview</h3>
+                            <p>Upload a PDF template to see preview</p>
+                        </div>
+                    </div>
+
+                    <!-- LIVE REPORT PREVIEW -->
+                    <div id="report-preview" class="report-preview hidden">
+                        <div id="report-content" class="report-content">
+                            <!-- Generated by JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- EXPORT PANEL -->
+            <div class="panel" id="export-panel">
+                <div class="panel-header">
+                    <span>📥</span>
+                    <h2>Step 4: Export Report</h2>
+                </div>
+                <div class="panel-body">
+
+                    <!-- EXPORT OPTIONS -->
+                    <div class="export-options">
+                        <label class="export-option">
+                            <input type="radio" name="export-format" value="pdf" checked>
+                            <div class="option-card">
+                                <span>📄</span>
+                                <strong>PDF</strong>
+                                <small>With metadata</small>
+                            </div>
+                        </label>
+                        <label class="export-option">
+                            <input type="radio" name="export-format" value="html">
+                            <div class="option-card">
+                                <span>🌐</span>
+                                <strong>HTML</strong>
+                                <small>Web format</small>
+                            </div>
+                        </label>
+                        <label class="export-option">
+                            <input type="radio" name="export-format" value="json">
+                            <div class="option-card">
+                                <span>📊</span>
+                                <strong>JSON</strong>
+                                <small>Data only</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- EXPORT SETTINGS -->
+                    <div class="export-settings">
+                        <div class="setting">
+                            <label>Report Name</label>
+                            <input type="text" 
+                                   id="report-name" 
+                                   placeholder="Security_Report_2025"
+                                   value="Security_Report_2025">
+                        </div>
+                        <div class="setting">
+                            <label>Preserve Original Metadata</label>
+                            <input type="checkbox" id="preserve-metadata" checked>
+                        </div>
+                        <div class="setting">
+                            <label>Include Table of Contents</label>
+                            <input type="checkbox" id="include-toc" checked>
+                        </div>
+                        <div class="setting">
+                            <label>Confidentiality Level</label>
+                            <select id="conf-level">
+                                <option value="public">Public</option>
+                                <option value="internal">Internal</option>
+                                <option value="confidential" selected>Confidential</option>
+                                <option value="topsecret">Top Secret</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- EXPORT BUTTONS -->
+                    <div class="export-buttons">
+                        <button class="btn-export" onclick="exportReport()">
+                            📥 Export Report
+                        </button>
+                        <button class="btn-save" onclick="saveTemplate()">
+                            💾 Save Template
+                        </button>
+                        <button class="btn-load" onclick="loadSavedTemplate()">
+                            📂 Load Saved
+                        </button>
+                    </div>
+
+                    <!-- PROGRESS BAR -->
+                    <div class="progress-container hidden" id="progress-container">
+                        <div class="progress-label">
+                            <span id="progress-text">Processing...</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICATION SYSTEM -->
+<div id="notifications" class="notifications"></div>
+
+<!-- MODAL -->
+<div class="modal hidden" id="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Add Custom Field</h3>
+            <button onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body">
+            <!-- Content -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn-primary" onclick="confirmModal()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="js/fieldMapper.js"></script>
+<script src="js/pdfHandler.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
